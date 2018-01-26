@@ -5,15 +5,12 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.github.curioustechizen.ago.RelativeTimeTextView;
 
 import br.com.lg.pomodoro.R;
+import br.com.lg.pomodoro.TimerFormat;
 import br.com.lg.pomodoro.model.Pomodoro;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,7 +30,7 @@ public class PomodoroHistoryItemView extends LinearLayout
     TextView status;
 
     @BindView(R.id.view_pomodoro_history_item_when)
-    TextView when;
+    RelativeTimeTextView when;
 
     private Unbinder unbinder;
 
@@ -67,13 +64,9 @@ public class PomodoroHistoryItemView extends LinearLayout
     public void fromPomodoro(Pomodoro pomodoro)
     {
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("mm:ss");
-
-        String val = simpleDateFormat.format(new Date((long)(pomodoro.getTime())));
-
-        timer.setText(val);
+        timer.setText(TimerFormat.format(pomodoro.getStart() - pomodoro.getTime()));
         status.setText(pomodoro.isFinished()?"Finished":"Stopped");
-        when.setText("1 min ago");
+        when.setReferenceTime(pomodoro.getCreated().getTime());
 
     }
 }

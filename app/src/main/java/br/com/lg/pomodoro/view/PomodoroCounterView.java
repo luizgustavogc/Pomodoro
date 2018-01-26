@@ -1,17 +1,28 @@
-package br.com.lg.pomodoro;
+package br.com.lg.pomodoro.view;
 
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import br.com.lg.pomodoro.R;
+import br.com.lg.pomodoro.model.Pomodoro;
+import br.com.lg.pomodoro.model.PomodoroEvent;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -25,8 +36,14 @@ public class PomodoroCounterView extends LinearLayout {
     @BindView(R.id.view_pomodoro_counter_timer)
     TextView timer;
 
+    @BindView(R.id.view_pomodoro_counter_fab)
+    FloatingActionButton fab;
+
+    private boolean runnning;
+
     private Unbinder unbinder;
     private int minutes;
+    private int start;
     private TimerTask timerTask;
 
     public PomodoroCounterView(Context context) {
@@ -53,12 +70,29 @@ public class PomodoroCounterView extends LinearLayout {
     {
         inflate(getContext(), R.layout.view_pomodoro_counter, this);
         unbinder = ButterKnife.bind(this);
+
+        fab.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(timerTask == null)
+                {
+                    start(1);
+                    fab.setImageDrawable(ContextCompat.getDrawable(getContext(), android.R.drawable.ic_media_ff));
+                }
+                else
+                {
+                    stop();
+                }
+            }
+        });
+
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         unbinder.unbind();
+        EventBus.getDefault().unregister(this);
     }
 
     public void setMinutes(int minutes)
@@ -74,16 +108,25 @@ public class PomodoroCounterView extends LinearLayout {
 
     public void start(int minutes)
     {
+        start = minutes * 60 * 1000;
 
-        setMinutes(minutes);
+        if(timerTask!=null && !timerTask.isCancelled())
+        {
+            stop();
+        }
+        else
+        {
 
-        updateTimer.sendEmptyMessage(0);
+            setMinutes(minutes);
 
-        timer.setTextColor(ContextCompat.getColor(getContext(), R.color.timerColorStarted));
+            updateTimer.sendEmptyMessage(0);
 
-        TimerTask timerTask = new TimerTask();
-        timerTask.execute();
+            timer.setTextColor(ContextCompat.getColor(getContext(), R.color.timerColorStarted));
 
+            timerTask = new TimerTask();
+            timerTask.execute();
+
+        }
     }
 
     public void start()
@@ -93,26 +136,49 @@ public class PomodoroCounterView extends LinearLayout {
 
     public void stop()
     {
-        timerTask.cancel(true);
+        stop(false);
+    }
+
+    private void stop(boolean finished)
+    {
+        if(timerTask!=null && !timerTask.isCancelled())
+        {
+            timerTask.cancel(true);
+            timerTask = null;
+        }
+
+        PomodoroEvent event = new PomodoroEvent();
+        Pomodoro pomodoro = new Pomodoro();
+        pomodoro.setTime(minutes);
+        pomodoro.setStart(start);
+        pomodoro.setFinished(finished);
+        event.setPomodoro(pomodoro);
+        EventBus.getDefault().post(event);
+
+        reset();
+
+        fab.setImageDrawable(ContextCompat.getDrawable(getContext(), android.R.drawable.ic_media_play));
+
+    }
+
+    private void reset()
+    {
+        timer.setText("00:00");
+        timer.setTextColor(ContextCompat.getColor(getContext(), R.color.timerColorStopped));
     }
 
     private class TimerTask extends AsyncTask<Void, Void, Void>
     {
 
-        private boolean running;
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            running = false;
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
 
-            running = true;
-
-            while(running)
+            while(minutes > 0 && !isCancelled())
             {
                 try
                 {
@@ -122,7 +188,6 @@ public class PomodoroCounterView extends LinearLayout {
                     minutes-=1000;
 
                     updateTimer.sendEmptyMessage(0);
-                    running = minutes > 0;
 
                 }
                 catch (InterruptedException e)
@@ -139,7 +204,7 @@ public class PomodoroCounterView extends LinearLayout {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
 
-            running = false;
+            done();
 
         }
 
@@ -147,8 +212,14 @@ public class PomodoroCounterView extends LinearLayout {
         protected void onCancelled() {
             super.onCancelled();
 
+            //done();
 
+        }
 
+        private void done()
+        {
+            minutes = 0;
+            stop(true);
         }
     }
 
@@ -166,5 +237,9 @@ public class PomodoroCounterView extends LinearLayout {
 
         }
     };
+
+
 }
+
+
 

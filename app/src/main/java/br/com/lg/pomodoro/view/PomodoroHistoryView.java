@@ -1,6 +1,8 @@
-package br.com.lg.pomodoro;
+package br.com.lg.pomodoro.view;
 
 import android.content.Context;
+import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,6 +19,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.lg.pomodoro.R;
 import br.com.lg.pomodoro.model.Pomodoro;
 import br.com.lg.pomodoro.model.PomodoroEvent;
 import br.com.lg.pomodoro.view.PomodoroHistoryItemView;
@@ -83,6 +86,10 @@ public class PomodoroHistoryView extends LinearLayout {
     {
         Pomodoro pomodoro = pomodoroEvent.getPomodoro();
         adapter.add(pomodoro);
+        refresh();
+    }
+
+    public void refresh() {
         adapter.refresh();
         adapter.notifyDataSetChanged();
     }

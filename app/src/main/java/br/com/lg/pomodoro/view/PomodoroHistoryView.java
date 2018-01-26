@@ -1,13 +1,10 @@
 package br.com.lg.pomodoro.view;
 
 import android.content.Context;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -22,7 +19,6 @@ import java.util.List;
 import br.com.lg.pomodoro.R;
 import br.com.lg.pomodoro.model.Pomodoro;
 import br.com.lg.pomodoro.model.PomodoroEvent;
-import br.com.lg.pomodoro.view.PomodoroHistoryItemView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;

@@ -1,62 +1,68 @@
 package br.com.lg.pomodoro;
 
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
 
-import org.greenrobot.eventbus.EventBus;
-
-import br.com.lg.pomodoro.model.Pomodoro;
-import br.com.lg.pomodoro.model.PomodoroEvent;
+import br.com.lg.pomodoro.fragment.PomodoroCounterFragment;
+import br.com.lg.pomodoro.fragment.PomodoroHistoryFragment;
 import io.paperdb.Paper;
 
-public class MainActivity extends AppCompatActivity implements Runnable{
+public class MainActivity extends AppCompatActivity
+{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Paper.init(this);
 
         setContentView(R.layout.activity_main);
 
+        getSupportActionBar().setElevation(0);
 
-        new Thread(this).start();
+        ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+
+        viewPager.setAdapter(adapter);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        tabLayout.setupWithViewPager(viewPager);
+
     }
 
-    @Override
-    public void run() {
 
-        int i = 0;
-        while(true)
-        {
-            i++;
-            ev.sendEmptyMessage(i);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    class ViewPagerAdapter extends FragmentPagerAdapter {
+
+        PomodoroCounterFragment pomodoroCounterFragment;
+        PomodoroHistoryFragment pomodoroHistoryFragment;
+
+        public ViewPagerAdapter(FragmentManager manager) {
+            super(manager);
+            pomodoroCounterFragment = new PomodoroCounterFragment();
+            pomodoroHistoryFragment = new PomodoroHistoryFragment();
         }
 
-    }
-
-
-    Handler ev = new Handler()
-    {
         @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-
-            PomodoroEvent event = new PomodoroEvent();
-            Pomodoro pomodoro = new Pomodoro();
-            pomodoro.setTime((1 + msg.what) * 1000);
-            pomodoro.setFinished(true);
-            event.setPomodoro(pomodoro);
-            EventBus.getDefault().post(event);
-
-
+        public Fragment getItem(int position)
+        {
+            Fragment fragment = pomodoroCounterFragment;
+            if(position == 1) fragment = pomodoroHistoryFragment;
+            return fragment;
         }
-    };
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return position == 0?"NEW":"HISTORY";
+        }
+    }
 }
